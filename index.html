@@ -38,6 +38,16 @@
   </div>
 </div>
 
+<div id="name-screen">
+  <div class="win-box">
+    <div class="win-emoji">🐱</div>
+    <div class="win-title">Wie heissisch?</div>
+    <p class="win-msg">Gib din Name i, damit mer di uf de Bestelischte gsehnd!</p>
+    <input type="text" id="name-input" class="name-input" placeholder="Din Name..." maxlength="12" autocomplete="off">
+    <button class="next-btn" id="name-btn">Los geht's! 🚀</button>
+  </div>
+</div>
+
 <div id="win-screen">
   <div class="win-box">
     <div class="win-emoji">🎉</div>
@@ -49,6 +59,10 @@
       <span class="win-stat-item" id="win-time-display"></span>
       <span class="win-stat-item" id="win-best"></span>
     </div>
+    <div class="leaderboard">
+      <div class="lb-title">🏆 Top 3 – Level <span id="lb-level-num">1</span></div>
+      <div id="lb-entries"><span class="lb-loading">Lade...</span></div>
+    </div>
     <button class="next-btn" id="next-btn">Nächsts Level ➡️</button>
   </div>
 </div>
@@ -59,7 +73,7 @@
 // =====================
 const canvas = document.getElementById('maze');
 
-const IMAGE_PATH = './static/';
+const IMAGE_PATH = '/static/'; // local: './static/'  |  server: '/static/'
 
 const playerImg = new Image();
 playerImg.src = IMAGE_PATH + 'player.png';
@@ -83,6 +97,50 @@ let playerPos = { x: 0, y: 0 };
 let exitPos = { x: 0, y: 0 };
 let COLS, ROWS, CELL;
 let steps = 0;
+
+// =====================
+// FIREBASE LEADERBOARD
+// =====================
+const DB_URL = 'https://jotta-labyrinth-default-rtdb.europe-west1.firebasedatabase.app';
+let playerName = localStorage.getItem('jotta_name') || '';
+
+async function submitScore(lvl, name, steps, time) {
+  try {
+    await fetch(`${DB_URL}/scores/level_${lvl}.json`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, steps, time, ts: Date.now() })
+    });
+  } catch(e) {}
+}
+
+async function fetchTopScores(lvl) {
+  try {
+    const res = await fetch(`${DB_URL}/scores/level_${lvl}.json`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data || typeof data !== 'object') return [];
+    return Object.values(data)
+      .sort((a, b) => a.steps !== b.steps ? a.steps - b.steps : a.time - b.time)
+      .slice(0, 3);
+  } catch(e) { return []; }
+}
+
+async function showLeaderboard(lvl) {
+  document.getElementById('lb-level-num').textContent = lvl + 1;
+  const el = document.getElementById('lb-entries');
+  el.innerHTML = '<span class="lb-loading">Lade...</span>';
+  const scores = await fetchTopScores(lvl);
+  if (scores.length === 0) {
+    el.textContent = 'No kei Einträg';
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  el.innerHTML = scores.map((s, i) => {
+    const m = Math.floor(s.time / 60), sec = s.time % 60;
+    return `<div class="lb-entry">${medals[i]} <strong>${s.name}</strong> — ${s.steps} Schritt <span class="lb-time">${m}:${sec.toString().padStart(2,'0')}</span></div>`;
+  }).join('');
+}
 
 // Timer
 let timerInterval = null;
@@ -343,8 +401,25 @@ function showWin() {
   const bestEl = document.getElementById('win-best');
   bestEl.textContent = isNew ? `🏆 Rekord: ${steps} Schritt!` : `Bester: ${best} Schritt`;
 
+  // Firebase leaderboard
+  submitScore(level, playerName, steps, elapsedSeconds);
+  showLeaderboard(level);
+
   ws.classList.add('show');
 }
+
+document.getElementById('name-btn').addEventListener('click', () => {
+  const val = document.getElementById('name-input').value.trim();
+  if (!val) return;
+  playerName = val;
+  localStorage.setItem('jotta_name', playerName);
+  document.getElementById('name-screen').classList.remove('show');
+  initLevel();
+});
+
+document.getElementById('name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('name-btn').click();
+});
 
 document.getElementById('next-btn').addEventListener('click', () => {
   document.getElementById('win-screen').classList.remove('show');
@@ -404,7 +479,11 @@ function checkImagesLoaded() {
   imagesLoaded++;
   if (imagesLoaded === 2) {
     generateFlowers();
-    initLevel();
+    if (!playerName) {
+      document.getElementById('name-screen').classList.add('show');
+    } else {
+      initLevel();
+    }
   }
 }
 
