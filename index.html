@@ -413,7 +413,7 @@ document.getElementById('name-btn').addEventListener('click', () => {
   if (!val) return;
   playerName = val;
   localStorage.setItem('jotta_name', playerName);
-  document.getElementById('name-screen').classList.remove('show');
+  document.getElementById('name-screen').style.display = 'none';
   initLevel();
 });
 
@@ -480,7 +480,9 @@ function checkImagesLoaded() {
   if (imagesLoaded === 2) {
     generateFlowers();
     if (!playerName) {
-      document.getElementById('name-screen').classList.add('show');
+      const ns = document.getElementById('name-screen');
+      ns.style.display = 'flex';
+      setTimeout(() => document.getElementById('name-input').focus(), 100);
     } else {
       initLevel();
     }
