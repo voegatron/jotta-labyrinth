@@ -22,6 +22,7 @@
 <div class="stats">
   <div class="stat">Level <span id="level-num">1</span></div>
   <div class="stat">Schritt <span id="steps">0</span></div>
+  <div class="stat">&#9201; <span id="timer">0:00</span></div>
 </div>
 
 <div id="game-area">
@@ -43,6 +44,11 @@
     <div class="level-badge" id="win-level">Level gschafft!</div>
     <div class="win-title">Super!</div>
     <div class="win-msg" id="win-msg">Du hesch de buddy gfunde!</div>
+    <div class="win-stars" id="win-stars"></div>
+    <div class="win-stats-row">
+      <span class="win-stat-item" id="win-time-display"></span>
+      <span class="win-stat-item" id="win-best"></span>
+    </div>
     <button class="next-btn" id="next-btn">Nächsts Level ➡️</button>
   </div>
 </div>
@@ -53,19 +59,12 @@
 // =====================
 const canvas = document.getElementById('maze');
 
-// IMAGE PATH CONFIGURATION
-// For local development: use './static/' or '../static/'
-// For server: use '/static/' or 'https://yourserver.com/static/'
-const IMAGE_PATH = '/static/';  // Change this based on your setup
+const IMAGE_PATH = './static/';
 
 const playerImg = new Image();
-playerImg.onload = () => console.log('✓ Player image loaded from: ' + playerImg.src + ' | Size: ' + playerImg.width + 'x' + playerImg.height);
-playerImg.onerror = () => console.log('✗ Failed to load player image from: ' + playerImg.src);
 playerImg.src = IMAGE_PATH + 'player.png';
 
 const exitImg = new Image();
-exitImg.onload = () => console.log('✓ Exit image loaded from: ' + exitImg.src + ' | Size: ' + exitImg.width + 'x' + exitImg.height);
-exitImg.onerror = () => console.log('✗ Failed to load exit image from: ' + exitImg.src);
 exitImg.src = IMAGE_PATH + 'exit.png';
 
 const ctx = canvas.getContext('2d');
@@ -84,6 +83,46 @@ let playerPos = { x: 0, y: 0 };
 let exitPos = { x: 0, y: 0 };
 let COLS, ROWS, CELL;
 let steps = 0;
+
+// Timer
+let timerInterval = null;
+let elapsedSeconds = 0;
+
+function startTimer() {
+  clearInterval(timerInterval);
+  elapsedSeconds = 0;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => { elapsedSeconds++; updateTimerDisplay(); }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(elapsedSeconds / 60);
+  const s = elapsedSeconds % 60;
+  document.getElementById('timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+// Best score (localStorage)
+function getBestSteps(lvl) {
+  const v = localStorage.getItem(`jotta_best_${lvl}`);
+  return v !== null ? parseInt(v) : null;
+}
+
+function saveBestSteps(lvl, s) {
+  const cur = getBestSteps(lvl);
+  if (cur === null || s < cur) { localStorage.setItem(`jotta_best_${lvl}`, s); return true; }
+  return false;
+}
+
+function calcStars(s, cols, rows) {
+  const min = cols + rows - 2;
+  if (s <= Math.floor(min * 1.5)) return 3;
+  if (s <= Math.floor(min * 2.5)) return 2;
+  return 1;
+}
 
 // Swipe support
 let touchStartX = 0, touchStartY = 0;
@@ -118,6 +157,7 @@ function initLevel() {
   document.getElementById('level-num').textContent = level + 1;
   document.getElementById('steps').textContent = 0;
 
+  startTimer();
   draw();
 }
 
@@ -282,10 +322,27 @@ function tryMove(dx, dy) {
 }
 
 function showWin() {
+  stopTimer();
   const ws = document.getElementById('win-screen');
   document.getElementById('win-level').textContent = `Level ${level + 1} gschafft!`;
-  const msgs = ['Da isch er!', 'D Yumi wird froh si ischer zrugg!', 'Guet gmacht!', 'Du bisch di best! ⭐'];
+  const msgs = ['Da isch er!', 'D Yumi wird froh si ischer zrugg!', 'Guet gmacht!', 'Du bisch di best!'];
   document.getElementById('win-msg').textContent = msgs[level % msgs.length];
+
+  // Stars
+  const stars = calcStars(steps, COLS, ROWS);
+  document.getElementById('win-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
+  // Time display
+  const m = Math.floor(elapsedSeconds / 60);
+  const s = elapsedSeconds % 60;
+  document.getElementById('win-time-display').textContent = `⏱ ${m}:${s.toString().padStart(2, '0')}`;
+
+  // Best score
+  const isNew = saveBestSteps(level, steps);
+  const best = getBestSteps(level);
+  const bestEl = document.getElementById('win-best');
+  bestEl.textContent = isNew ? `🏆 Rekord: ${steps} Schritt!` : `Bester: ${best} Schritt`;
+
   ws.classList.add('show');
 }
 
@@ -341,7 +398,7 @@ setupBtn('btn-down', 0, 1);
 setupBtn('btn-left', -1, 0);
 setupBtn('btn-right', 1, 0);
 
-// Start - Wait for images to load
+// Start - Wait for images to load (fall through on error so game always starts)
 let imagesLoaded = 0;
 function checkImagesLoaded() {
   imagesLoaded++;
@@ -351,15 +408,11 @@ function checkImagesLoaded() {
   }
 }
 
-playerImg.onload = function() {
-  console.log('✓ Player image loaded | Size: ' + this.width + 'x' + this.height);
-  checkImagesLoaded();
-};
+playerImg.onload = function() { checkImagesLoaded(); };
+playerImg.onerror = function() { checkImagesLoaded(); };
 
-exitImg.onload = function() {
-  console.log('✓ Exit image loaded | Size: ' + this.width + 'x' + this.height);
-  checkImagesLoaded();
-};
+exitImg.onload = function() { checkImagesLoaded(); };
+exitImg.onerror = function() { checkImagesLoaded(); };
 </script>
 </body>
 </html>

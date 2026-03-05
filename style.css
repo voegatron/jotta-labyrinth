@@ -218,6 +218,28 @@ canvas {
 }
 .next-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #bf6f00; }
 
+.win-stars {
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.win-stats-row {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.win-stat-item {
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  padding: 3px 12px;
+  color: #c8e6c9;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .level-badge {
   display: inline-block;
   background: rgba(255,214,0,0.2);
