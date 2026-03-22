@@ -39,6 +39,15 @@
   </div>
 </div>
 
+<div id="birthday-screen">
+  <div class="birthday-box">
+    <div class="birthday-emoji">🎂</div>
+    <h2 class="story-title">Happy Birthday<br>Jotta!</h2>
+    <p class="story-subtitle"><em>Alles Gueti zum Geburtstag! 🎉<br>Jetzt hesch e ganz bsunderi Mission!</em></p>
+    <button class="cta-btn" id="birthday-btn">Spiel starte 🐾</button>
+  </div>
+</div>
+
 <div id="name-screen">
   <h2 class="story-title">Find de Buddy!</h2>
   <p class="story-subtitle"><em>Hilf de Jotta de Buddy zfinde!<br>D Yumi vermisst en scho.</em></p>
@@ -567,19 +576,35 @@ setupBtn('btn-down', 0, 1);
 setupBtn('btn-left', -1, 0);
 setupBtn('btn-right', 1, 0);
 
+// Birthday check
+const _now = new Date();
+const isBirthday = _now.getMonth() === 2 && _now.getDate() === 23; // month is 0-indexed
+
+function continueAfterBirthday() {
+  generateFlowers();
+  if (!playerName) {
+    const ns = document.getElementById('name-screen');
+    ns.style.display = 'flex';
+    setTimeout(() => document.getElementById('name-input').focus(), 100);
+  } else {
+    initLevel();
+  }
+}
+
+if (isBirthday) {
+  document.getElementById('birthday-screen').style.display = 'flex';
+  document.getElementById('birthday-btn').addEventListener('click', () => {
+    document.getElementById('birthday-screen').style.display = 'none';
+    continueAfterBirthday();
+  });
+}
+
 // Start - Wait for images to load (fall through on error so game always starts)
 let imagesLoaded = 0;
 function checkImagesLoaded() {
   imagesLoaded++;
   if (imagesLoaded === 2) {
-    generateFlowers();
-    if (!playerName) {
-      const ns = document.getElementById('name-screen');
-      ns.style.display = 'flex';
-      setTimeout(() => document.getElementById('name-input').focus(), 100);
-    } else {
-      initLevel();
-    }
+    if (!isBirthday) continueAfterBirthday();
   }
 }
 
