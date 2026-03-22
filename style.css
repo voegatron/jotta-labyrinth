@@ -366,7 +366,7 @@ canvas.dragging { cursor: grabbing; }
 }
 
 .win-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Nunito', sans-serif;
   font-size: 2.4rem;
   font-weight: 900;
   color: var(--accent);
