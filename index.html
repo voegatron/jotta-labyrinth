@@ -4,19 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Find de Buddy!</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,400;1,700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
-<div class="leaves">🌿</div>
-<div class="leaves">🌿</div>
-<div class="leaves">🌿</div>
-<div class="leaves">🌿</div>
+<div class="deco deco-1">★</div>
+<div class="deco deco-2">🐾</div>
+<div class="deco deco-3">★</div>
+<div class="deco deco-4">🐾</div>
+<div class="deco deco-5">★</div>
+<div class="deco deco-6">🐾</div>
 
 <header>
-  <h1>Find de Buddy!</h1>
-  <p class="subtitle">Hilf de Jotta de Buddy zfinde! D Yumi vermisst en scho.</p>
+  <h1><em>Find de Buddy!</em></h1>
 </header>
 
 <div class="stats">
@@ -39,18 +40,23 @@
 </div>
 
 <div id="name-screen">
-  <div class="win-box">
-    <div class="win-emoji">🐱</div>
-    <div class="win-title">Wie heissisch?</div>
-    <p class="win-msg">Gib din Name i, demit mer dich uf de Bestelischte gsehnd!</p>
+  <h2 class="story-title">Find de Buddy!</h2>
+  <p class="story-subtitle"><em>Hilf de Jotta de Buddy zfinde!<br>D Yumi vermisst en scho.</em></p>
+  <div class="scene-image">
+    <img id="intro-img" alt="dJotta sucht Buddy">
+  </div>
+  <div class="name-form">
+    <p class="name-prompt">🐾 Wie heissisch?</p>
     <input type="text" id="name-input" class="name-input" placeholder="Din Name..." maxlength="12" autocomplete="off">
-    <button class="next-btn" id="name-btn">Los geht's! 🚀</button>
+    <button class="cta-btn" id="name-btn">Los gaht's! 🐾</button>
   </div>
 </div>
 
 <div id="win-screen">
   <div class="win-box">
-    <div class="win-emoji">🎉</div>
+    <div class="win-scene-image">
+      <img id="found-img" alt="Buddy gfunde!">
+    </div>
     <div class="level-badge" id="win-level">Level gschafft!</div>
     <div class="win-title">Super!</div>
     <div class="win-msg" id="win-msg">Du hesch de buddy gfunde!</div>
@@ -73,7 +79,10 @@
 // =====================
 const canvas = document.getElementById('maze');
 
-const IMAGE_PATH = '/static/'; // local: './static/'  |  server: '/static/'
+const IMAGE_PATH = './static/'; // local: './static/'  |  server: '/static/'
+
+document.getElementById('intro-img').src = IMAGE_PATH + 'intro.png';
+document.getElementById('found-img').src = IMAGE_PATH + 'found.png';
 
 const playerImg = new Image();
 playerImg.src = IMAGE_PATH + 'player.png';
@@ -185,8 +194,8 @@ function calcStars(s, cols, rows) {
 // Swipe support
 let touchStartX = null, touchStartY = null;
 
-const WALL_COLOR = '#1b5e20';
-const PATH_COLOR = '#f9fbe7';
+const WALL_COLOR = '#7a5530';
+const PATH_COLOR = '#f5f0e5';
 
 const FLOWER_EMOJI = '🌸';
 
