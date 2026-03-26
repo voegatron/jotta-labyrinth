@@ -125,10 +125,7 @@ h1 {
 canvas {
   display: block;
   image-rendering: pixelated;
-  cursor: grab;
 }
-
-canvas.dragging { cursor: grabbing; }
 
 /* =====================
    D-PAD CONTROLS

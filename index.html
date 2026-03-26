@@ -200,6 +200,28 @@ function calcStars(s, cols, rows) {
   return 1;
 }
 
+// =====================
+// PROGRESS COOKIE
+// =====================
+function setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+}
+
+function getCookie(name) {
+  const match = document.cookie.split('; ').find(c => c.startsWith(name + '='));
+  return match ? decodeURIComponent(match.split('=')[1]) : null;
+}
+
+function saveProgress() {
+  setCookie('jotta_level', level, 365);
+}
+
+function loadProgress() {
+  const saved = getCookie('jotta_level');
+  if (saved !== null) level = Math.min(parseInt(saved) || 0, LEVELS.length - 1);
+}
+
 // Swipe support
 let touchStartX = null, touchStartY = null;
 
@@ -217,6 +239,7 @@ function calcCellSize(cols, rows) {
 }
 
 function initLevel() {
+  saveProgress();
   const cfg = LEVELS[Math.min(level, LEVELS.length - 1)];
   COLS = cfg.cols;
   ROWS = cfg.rows;
@@ -431,6 +454,7 @@ document.getElementById('name-btn').addEventListener('click', () => {
   if (!val) return;
   playerName = val;
   localStorage.setItem('jotta_name', playerName);
+  level = 0;
   document.getElementById('name-screen').style.display = 'none';
   initLevel();
 });
@@ -453,85 +477,6 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowLeft') tryMove(-1, 0);
   else if (e.key === 'ArrowRight') tryMove(1, 0);
 });
-
-// =====================
-// DRAG PLAYER
-// =====================
-let isDragging = false;
-let dragLastX = 0, dragLastY = 0;
-let dragAccX = 0, dragAccY = 0;
-
-function getTouchedCell(clientX, clientY) {
-  const rect = canvas.getBoundingClientRect();
-  const x = Math.floor((clientX - rect.left) * COLS / rect.width);
-  const y = Math.floor((clientY - rect.top) * ROWS / rect.height);
-  return { x, y };
-}
-
-function startDrag(clientX, clientY) {
-  const cell = getTouchedCell(clientX, clientY);
-  if (cell.x === playerPos.x && cell.y === playerPos.y) {
-    isDragging = true;
-    dragLastX = clientX;
-    dragLastY = clientY;
-    dragAccX = 0;
-    dragAccY = 0;
-    touchStartX = null; // prevent swipe from also firing
-    canvas.classList.add('dragging');
-    return true;
-  }
-  return false;
-}
-
-function processDrag(clientX, clientY) {
-  if (!isDragging) return;
-  dragAccX += clientX - dragLastX;
-  dragAccY += clientY - dragLastY;
-  dragLastX = clientX;
-  dragLastY = clientY;
-
-  const rect = canvas.getBoundingClientRect();
-  const cellPx = rect.width / COLS;
-  const threshold = cellPx * 0.5;
-
-  while (true) {
-    const ax = Math.abs(dragAccX), ay = Math.abs(dragAccY);
-    if (ax < threshold && ay < threshold) break;
-    if (ax >= ay && ax >= threshold) {
-      tryMove(dragAccX > 0 ? 1 : -1, 0);
-      dragAccX += dragAccX > 0 ? -cellPx : cellPx;
-      dragAccY = 0;
-    } else if (ay > ax && ay >= threshold) {
-      tryMove(0, dragAccY > 0 ? 1 : -1);
-      dragAccY += dragAccY > 0 ? -cellPx : cellPx;
-      dragAccX = 0;
-    } else {
-      break;
-    }
-  }
-}
-
-function endDrag() {
-  isDragging = false;
-  canvas.classList.remove('dragging');
-}
-
-canvas.addEventListener('touchstart', e => {
-  if (startDrag(e.touches[0].clientX, e.touches[0].clientY)) {
-    e.stopPropagation(); // don't let document swipe capture this touch
-  }
-}, { passive: true });
-
-canvas.addEventListener('touchmove', e => {
-  processDrag(e.touches[0].clientX, e.touches[0].clientY);
-}, { passive: true });
-
-canvas.addEventListener('touchend', endDrag, { passive: true });
-
-// Mouse drag (desktop)
-canvas.addEventListener('mousedown', e => { startDrag(e.clientX, e.clientY); });
-document.addEventListener('mousemove', e => { processDrag(e.clientX, e.clientY); });
-document.addEventListener('mouseup', endDrag);
 
 // =====================
 // SWIPE (anywhere outside canvas / buttons)
@@ -582,6 +527,7 @@ const isBirthday = _now.getMonth() === 2 && _now.getDate() === 23; // month is 0
 
 function continueAfterBirthday() {
   generateFlowers();
+  loadProgress();
   if (!playerName) {
     const ns = document.getElementById('name-screen');
     ns.style.display = 'flex';
