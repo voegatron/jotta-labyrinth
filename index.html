@@ -39,6 +39,28 @@
   </div>
 </div>
 
+<div id="continue-screen">
+  <div class="chapter-badge">WILLKOMME ZRUGG!</div>
+  <h2 class="story-title">Hoi <span id="continue-name"></span>!</h2>
+  <p class="story-subtitle"><em>Du bisch scho bis Level <span id="continue-level"></span> cho.<br>Wotsch wiitermache?</em></p>
+  <div class="name-form">
+    <button class="cta-btn" id="continue-btn">Wiitermache 🐾</button>
+    <button class="secondary-btn" id="newgame-btn">Neus Spiel starte</button>
+  </div>
+</div>
+
+<div id="finale-screen">
+  <div class="win-box">
+    <div class="win-scene-image">
+      <img id="finale-img" alt="Buddy gfunde!">
+    </div>
+    <div class="level-badge">ALLE 10 LEVEL GSCHAFFT!</div>
+    <div class="win-title">Du hesch gwunne!</div>
+    <div class="win-msg">Buddy isch sicher bi Jotta! Du bisch e wahri Held! 🏆</div>
+    <button class="cta-btn" id="finale-btn">Nochmal spiele 🐾</button>
+  </div>
+</div>
+
 <div id="birthday-screen">
   <div class="birthday-box">
     <div class="birthday-emoji">🎂</div>
@@ -92,6 +114,7 @@ const IMAGE_PATH = '/static/'; // local: './static/'  |  server: '/static/'
 
 document.getElementById('intro-img').src = IMAGE_PATH + 'intro.png';
 document.getElementById('found-img').src = IMAGE_PATH + 'found.png';
+document.getElementById('finale-img').src = IMAGE_PATH + 'found.png';
 
 const playerImg = new Image();
 playerImg.src = IMAGE_PATH + 'player.png';
@@ -102,11 +125,16 @@ exitImg.src = IMAGE_PATH + 'exit.png';
 const ctx = canvas.getContext('2d');
 
 const LEVELS = [
-  { cols: 7, rows: 7 },
-  { cols: 9, rows: 9 },
+  { cols: 7,  rows: 7  },
+  { cols: 9,  rows: 9  },
   { cols: 11, rows: 11 },
   { cols: 13, rows: 13 },
   { cols: 15, rows: 15 },
+  { cols: 17, rows: 17 },
+  { cols: 19, rows: 19 },
+  { cols: 21, rows: 21 },
+  { cols: 23, rows: 23 },
+  { cols: 25, rows: 25 },
 ];
 
 let level = 0;
@@ -235,7 +263,7 @@ function calcCellSize(cols, rows) {
   const maxH = Math.min(window.innerHeight - 280, 420);
   const byW = Math.floor(maxW / cols);
   const byH = Math.floor(maxH / rows);
-  return Math.max(24, Math.min(byW, byH));
+  return Math.max(14, Math.min(byW, byH));
 }
 
 function initLevel() {
@@ -466,6 +494,18 @@ document.getElementById('name-input').addEventListener('keydown', e => {
 document.getElementById('next-btn').addEventListener('click', () => {
   document.getElementById('win-screen').classList.remove('show');
   level++;
+  if (level >= LEVELS.length) {
+    level = 0;
+    saveProgress();
+    document.getElementById('finale-screen').style.display = 'flex';
+  } else {
+    generateFlowers();
+    initLevel();
+  }
+});
+
+document.getElementById('finale-btn').addEventListener('click', () => {
+  document.getElementById('finale-screen').style.display = 'none';
   generateFlowers();
   initLevel();
 });
@@ -529,13 +569,31 @@ function continueAfterBirthday() {
   generateFlowers();
   loadProgress();
   if (!playerName) {
-    const ns = document.getElementById('name-screen');
-    ns.style.display = 'flex';
+    document.getElementById('name-screen').style.display = 'flex';
     setTimeout(() => document.getElementById('name-input').focus(), 100);
+  } else if (level > 0) {
+    document.getElementById('continue-name').textContent = playerName;
+    document.getElementById('continue-level').textContent = level + 1;
+    document.getElementById('continue-screen').style.display = 'flex';
   } else {
     initLevel();
   }
 }
+
+document.getElementById('continue-btn').addEventListener('click', () => {
+  document.getElementById('continue-screen').style.display = 'none';
+  initLevel();
+});
+
+document.getElementById('newgame-btn').addEventListener('click', () => {
+  document.getElementById('continue-screen').style.display = 'none';
+  playerName = '';
+  localStorage.removeItem('jotta_name');
+  level = 0;
+  saveProgress();
+  document.getElementById('name-screen').style.display = 'flex';
+  setTimeout(() => document.getElementById('name-input').focus(), 100);
+});
 
 if (isBirthday) {
   document.getElementById('birthday-screen').style.display = 'flex';
